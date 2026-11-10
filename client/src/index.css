@@ -146,3 +146,37 @@
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
+
+/* ── Bookcase (My Bookshelf) ─────────────────────────────────────────────
+ * Light natural wood derived from Creamy Oat + Cocoa Rose tints.
+ * Grain is an SVG fractal-noise texture stretched along the plank direction.
+ */
+@utility wood-grain-v {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.5 0.012' numOctaves='3' seed='7'/%3E%3CfeColorMatrix values='0 0 0 0 0.41 0 0 0 0 0.31 0 0 0 0 0.28 0 0 0 0.11 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+}
+@utility wood-grain-h {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.012 0.5' numOctaves='3' seed='3'/%3E%3CfeColorMatrix values='0 0 0 0 0.41 0 0 0 0 0.31 0 0 0 0 0.28 0 0 0 0.13 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+}
+@utility bookcase-frame {
+  background-color: #dcbd95;
+  background-image:
+    linear-gradient(90deg, rgb(104 79 72 / 0.18), transparent 4%, rgb(255 255 255 / 0.12) 50%, transparent 96%, rgb(104 79 72 / 0.18)),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.5 0.012' numOctaves='3' seed='2'/%3E%3CfeColorMatrix values='0 0 0 0 0.41 0 0 0 0 0.31 0 0 0 0 0.28 0 0 0 0.14 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+}
+@utility bookcase-panel {
+  background-color: #f1e0c4;
+  background-image:
+    repeating-linear-gradient(90deg, transparent 0 179px, rgb(104 79 72 / 0.07) 179px 180px),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.5 0.012' numOctaves='3' seed='7'/%3E%3CfeColorMatrix values='0 0 0 0 0.41 0 0 0 0 0.31 0 0 0 0 0.28 0 0 0 0.09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+  box-shadow:
+    inset 0 14px 18px -12px rgb(51 36 31 / 0.35),
+    inset 14px 0 16px -14px rgb(51 36 31 / 0.3),
+    inset -14px 0 16px -14px rgb(51 36 31 / 0.3);
+}
+@utility spine-shade {
+  background: linear-gradient(90deg, rgb(30 20 16 / 0.34) 0%, rgb(255 255 255 / 0.16) 14%, rgb(255 255 255 / 0.04) 32%, rgb(30 20 16 / 0.04) 70%, rgb(30 20 16 / 0.38) 100%);
+}
+@utility plaque {
+  background: linear-gradient(180deg, #fefaf3, #f6ead4);
+  box-shadow: 0 1px 0 rgb(255 255 255 / 0.7) inset, 0 1px 2px rgb(51 36 31 / 0.18), 0 0 0 1px rgb(104 79 72 / 0.22);
+}
