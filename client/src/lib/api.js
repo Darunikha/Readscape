@@ -35,7 +35,11 @@ async function request(path, { method = 'GET', body, signal } = {}) {
     if (err.name === 'AbortError') throw err;
     throw new ApiError('Cannot reach Readscape. Check your connection and try again.', 0);
   }
-  const data = await res.json().catch(() => ({}));
+  const data = await res.json().catch(() => null);
+  if (data === null && !res.ok) {
+    // No JSON body: the dev proxy couldn't reach the API server.
+    throw new ApiError('Can’t reach the Readscape server. Make sure the API is running (npm run dev from the project root).', res.status);
+  }
   if (!res.ok) {
     if (res.status === 401 && token && unauthorizedHandler) unauthorizedHandler();
     throw new ApiError(data.message || 'Something went wrong', res.status, data.details);
