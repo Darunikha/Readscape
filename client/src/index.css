@@ -1,0 +1,148 @@
+@import 'tailwindcss';
+
+/*
+ * Readscape design tokens — built only from the four palette colours:
+ * Cocoa Rose #684F48 · Winter Mist #D6E9ED · Silver Veil #93A8AD · Creamy Oat #F9E7C7
+ * plus lighter/darker tints of those for depth.
+ */
+@theme {
+  --font-serif: 'Cormorant Garamond', 'Iowan Old Style', Georgia, serif;
+  --font-sans: 'DM Sans Variable', ui-sans-serif, system-ui, sans-serif;
+
+  --color-cocoa-50: #f6efec;
+  --color-cocoa-100: #ecdfd9;
+  --color-cocoa-200: #dcc6bd;
+  --color-cocoa-300: #c3a69a;
+  --color-cocoa-400: #9c7f74;
+  --color-cocoa-500: #7f645b;
+  --color-cocoa-600: #684f48;
+  --color-cocoa: #684f48;
+  --color-cocoa-700: #574039;
+  --color-cocoa-800: #46332d;
+  --color-cocoa-900: #33241f;
+
+  --color-mist-50: #f1f8f9;
+  --color-mist-100: #e5f1f4;
+  --color-mist: #d6e9ed;
+  --color-mist-300: #c1dbe1;
+  --color-mist-400: #a9cad2;
+
+  --color-silver-50: #eef2f3;
+  --color-silver-100: #dae3e5;
+  --color-silver-200: #c3d0d3;
+  --color-silver-300: #aebec2;
+  --color-silver: #93a8ad;
+  --color-silver-600: #758c92;
+  --color-silver-700: #5c7177;
+
+  --color-oat-50: #fefaf3;
+  --color-oat-100: #fcf3e3;
+  --color-oat-150: #fbefd8;
+  --color-oat: #f9e7c7;
+  --color-oat-300: #f0d7ab;
+  --color-oat-400: #e3c38c;
+
+  --shadow-soft: 0 1px 2px rgb(104 79 72 / 0.05), 0 4px 16px -6px rgb(104 79 72 / 0.12);
+  --shadow-lift: 0 2px 4px rgb(104 79 72 / 0.06), 0 12px 28px -10px rgb(104 79 72 / 0.22);
+  --shadow-book: 2px 3px 6px rgb(51 36 31 / 0.18), 6px 10px 22px -8px rgb(51 36 31 / 0.28);
+
+  --animate-page: page-in 0.38s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  --animate-pop: pop-in 0.22s cubic-bezier(0.2, 0.8, 0.2, 1.2) both;
+  --animate-fade: fade-in 0.2s ease-out both;
+  --animate-rise: rise-in 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  --animate-sway: sway 4s ease-in-out infinite;
+
+  @keyframes page-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  @keyframes pop-in { from { opacity: 0; transform: scale(0.96) translateY(4px); } to { opacity: 1; transform: none; } }
+  @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes rise-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+  @keyframes sway { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }
+}
+
+@layer base {
+  html { -webkit-tap-highlight-color: transparent; }
+  body {
+    @apply bg-oat-100 font-sans text-cocoa antialiased;
+    font-variant-numeric: lining-nums;
+    font-size: 15px;
+    background-image:
+      radial-gradient(circle at 12% 0%, rgb(249 231 199 / 0.7), transparent 40%),
+      radial-gradient(circle at 100% 100%, rgb(214 233 237 / 0.35), transparent 45%);
+    background-attachment: fixed;
+  }
+  h1, h2, h3, .font-display { @apply font-serif font-semibold tracking-tight text-cocoa; }
+  ::selection { background: var(--color-mist-300); color: var(--color-cocoa-900); }
+  :focus-visible { outline: 2px solid var(--color-silver-600); outline-offset: 2px; border-radius: 6px; }
+  input[type='range'] { accent-color: var(--color-cocoa); }
+  input[type='date']::-webkit-calendar-picker-indicator { opacity: 0.6; cursor: pointer; }
+}
+
+@utility card { @apply rounded-2xl border border-cocoa/10 bg-oat-50/90 shadow-soft; }
+
+@utility btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium transition
+      duration-200 select-none disabled:cursor-not-allowed disabled:opacity-55 active:scale-[0.98];
+  }
+
+@utility btn-primary { @apply btn bg-cocoa text-oat-50 shadow-soft hover:bg-cocoa-700; }
+
+@utility btn-secondary { @apply btn border border-cocoa/20 bg-oat-50 text-cocoa hover:border-cocoa/35 hover:bg-oat-100; }
+
+@utility btn-soft { @apply btn bg-mist text-cocoa-800 hover:bg-mist-300; }
+
+@utility btn-ghost { @apply btn px-3 text-cocoa-500 hover:bg-cocoa-50 hover:text-cocoa; }
+
+@utility btn-danger { @apply btn bg-cocoa-800 text-oat-50 hover:bg-cocoa-900; }
+
+@utility btn-sm { @apply px-3.5 py-1.5 text-[13px]; }
+
+@utility icon-btn {
+    @apply inline-flex size-9 items-center justify-center rounded-full text-cocoa-500 transition hover:bg-cocoa-50 hover:text-cocoa;
+  }
+
+@utility input {
+    @apply w-full rounded-xl border border-cocoa/15 bg-oat-50 px-3.5 py-2.5 text-[15px] text-cocoa placeholder:text-cocoa-400/80
+      transition outline-none focus:border-silver-600 focus:ring-3 focus:ring-mist/70;
+  }
+
+@utility label { @apply mb-1.5 block text-[13px] font-medium text-cocoa-500; }
+
+@utility chip {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-cocoa/12 bg-oat-50 px-3 py-1 text-[13px] text-cocoa-700 transition;
+  }
+
+@utility chip-active { @apply border-cocoa bg-cocoa text-oat-50; }
+
+@utility section-title { @apply font-serif text-[26px] leading-tight font-semibold text-cocoa; }
+
+@utility eyebrow { @apply text-[11px] font-semibold tracking-[0.16em] text-silver-700 uppercase; }
+
+@utility skeleton {
+    @apply rounded-lg bg-cocoa-100/70;
+    background-image: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.45), transparent);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s infinite linear;
+  }
+
+@utility gingham {
+    background-color: var(--color-mist-50);
+    background-image:
+      linear-gradient(90deg, rgb(147 168 173 / 0.28) 50%, transparent 50%),
+      linear-gradient(rgb(147 168 173 / 0.28) 50%, transparent 50%);
+    background-size: 22px 22px;
+  }
+
+@utility scroll-row { @apply flex snap-x gap-5 overflow-x-auto pb-3; scrollbar-width: thin; scrollbar-color: var(--color-cocoa-200) transparent; 
+  & > * { scroll-snap-align: start; }
+}
+
+@utility no-scrollbar { scrollbar-width: none; }
+
+@utility line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+
+@keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
