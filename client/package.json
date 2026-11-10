@@ -2,9 +2,10 @@
   "name": "readscape-client",
   "version": "1.0.0",
   "scripts": {
-    "dev": "vite",
+    "dev": "npm --prefix .. run dev",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "web": "vite"
   },
   "type": "module",
   "private": "true",
