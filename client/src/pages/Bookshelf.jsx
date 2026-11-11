@@ -24,21 +24,21 @@ const SECTIONS = [
     title: 'Currently Reading',
     empty: 'Nothing on the nightstand yet — pick a book to begin.',
     left: <><TrailingPlant trail={84} /><CatOnBooks className="-ml-2" /></>,
-    right: <><JarBouquet /><UprightSpines className="-ml-3" /></>,
+    right: <><JarBouquet /><UprightSpines size={0.74} className="-ml-5" /></>,
   },
   {
     key: 'want',
     title: 'Want to Read',
     empty: 'Save the stories you’re dreaming of reading next.',
     left: <><FramedPrint /><CandleJar className="ml-2" /></>,
-    right: <><LyingBooks className="w-[110px]" /><TrailingPlant trail={170} side="right" className="-ml-6 mb-[52px]" /></>,
+    right: <><LyingBooks width={110} /><TrailingPlant trail={170} side="right" className="-ml-6 mb-[52px]" /></>,
   },
   {
     key: 'read',
     title: 'Read',
     empty: 'Every book you finish will find its place here.',
     left: <><UprightSpines /><DaisyVase className="-ml-2" /></>,
-    right: <><Globe /><LyingBooks count={2} className="-ml-4 w-[96px]" /></>,
+    right: <><Globe /><LyingBooks count={2} width={96} className="-ml-4" /></>,
   },
 ];
 const SORTS = [

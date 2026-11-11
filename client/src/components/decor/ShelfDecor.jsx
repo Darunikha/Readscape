@@ -110,7 +110,7 @@ export function JarBouquet({ className }) {
 }
 
 /** A loose row of upright books, one leaning. */
-export function UprightSpines({ className, flip = false }) {
+export function UprightSpines({ className, flip = false, size = 1 }) {
   const books = [
     [8, 56, 18, 92, '#D6E9ED'],
     [27, 44, 16, 104, CERAMIC],
@@ -119,7 +119,7 @@ export function UprightSpines({ className, flip = false }) {
     [81, 52, 18, 96, '#7F645B'],
   ];
   return (
-    <svg viewBox="0 0 128 152" className={cn('block h-[150px] w-[126px]', flip && '-scale-x-100', className)} aria-hidden>
+    <svg viewBox="0 0 128 152" className={cn('block shrink-0', flip && '-scale-x-100', className)} style={{ width: 126 * size, height: 150 * size }} aria-hidden>
       <ellipse cx="64" cy="149" rx="60" ry="3" fill={INK} opacity=".16" />
       {books.map(([x, y, w, h, c], i) => (
         <g key={i}>
@@ -194,7 +194,7 @@ export function CandleJar({ className }) {
 }
 
 /** Books lying flat, cream and mist. */
-export function LyingBooks({ className, count = 3 }) {
+export function LyingBooks({ className, count = 3, width = 136 }) {
   const books = [
     [6, 104, 128, 20, '#D6E9ED'],
     [14, 84, 114, 20, CERAMIC],
@@ -203,7 +203,7 @@ export function LyingBooks({ className, count = 3 }) {
   ].slice(0, count);
   const top = books.at(-1)[1];
   return (
-    <svg viewBox={`0 ${top - 4} 140 ${128 - top}`} className={cn('block w-[136px]', className)} aria-hidden>
+    <svg viewBox={`0 ${top - 4} 140 ${128 - top}`} className={cn('block shrink-0', className)} style={{ width }} aria-hidden>
       <ellipse cx="70" cy="125" rx="64" ry="3" fill={INK} opacity=".16" />
       {books.map(([x, y, w, h, c], i) => (
         <g key={i}>
