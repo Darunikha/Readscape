@@ -7,9 +7,11 @@
 import { imageSize } from 'image-size';
 
 // Free-tier models, tried in order when one is overloaded.
-const MODELS = () => [process.env.GEMINI_MODEL || 'gemini-flash-lite-latest', 'gemini-2.5-flash-lite', 'gemini-flash-latest'];
-// A stronger model for the precise "exactly one spine" bounding box.
-const PRECISE_MODELS = () => [process.env.GEMINI_PRECISE_MODEL || 'gemini-flash-latest', 'gemini-2.5-flash', 'gemini-flash-lite-latest'];
+// (Checked against this key: the 2.5 models are retired for new users, and
+// gemini-flash-latest is too slow on the free tier, so only fast "lite" models.)
+const MODELS = () => [process.env.GEMINI_MODEL || 'gemini-flash-lite-latest', 'gemini-3.5-flash-lite', 'gemini-3.1-flash-lite'];
+// Model for the precise "exactly one spine" bounding box.
+const PRECISE_MODELS = () => [process.env.GEMINI_PRECISE_MODEL || 'gemini-3.5-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.1-flash-lite'];
 const ENDPOINT = (m) => `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent`;
 
 /** Quota or overload — the book is re-queued and tried again later. */
@@ -42,7 +44,7 @@ async function callModel(model, parts) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-goog-api-key': process.env.GEMINI_API_KEY },
     body: JSON.stringify({ contents: [{ parts }], generationConfig: { responseMimeType: 'application/json', temperature: 0 } }),
-    signal: AbortSignal.timeout(90000),
+    signal: AbortSignal.timeout(45000),
   });
   const data = await res.json().catch(() => ({}));
   return { res, data };

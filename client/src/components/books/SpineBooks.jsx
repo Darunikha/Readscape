@@ -45,9 +45,7 @@ export const uprightHeight = (book) => 172 + (hash(book.olId) % 6) * 6; // 172�
 export function uprightWidth(book) {
   const h = uprightHeight(book);
   if (hasPhoto(book)) return Math.round(clamp(h / photoGeom(book.spine).ratio, 18, 64));
-  if (isPending(book)) return 34;
-  if (book.coverId) return Math.round(h * (2 / 3));
-  return 40;
+  return 40; // labelled placeholder (searching / no photo) — never the cover
 }
 export const lyingLength = (book) => 132 + (hash(book.olId) % 6) * 7; // 132–167px
 export const lyingThickness = (book) => Math.round(clamp(lyingLength(book) / photoGeom(book.spine).ratio, 16, 40));
@@ -141,7 +139,7 @@ export function BookOnShelf({ entry, children, onProgress, className }) {
           <div className="mt-2 border-t border-cocoa/10 pt-2">
             {hasPhoto(book) ? <SpineSource spine={book.spine} /> : (
               <p className="text-[11.5px] text-cocoa-400">
-                {isPending(book) ? 'Searching for a photo of the real spine…' : book.coverId ? 'No verified spine photo — showing the front cover.' : 'No verified spine photo found.'}
+                {isPending(book) ? 'Searching for a photo of the real spine…' : 'No verified photo of this book’s spine was found.'}
               </p>
             )}
             <Link to={`/book/${book.olId}#spine`} className="mt-0.5 block text-[11.5px] font-medium text-silver-700 hover:underline">
@@ -162,22 +160,21 @@ export function BookOnShelf({ entry, children, onProgress, className }) {
 const linkProps = (book) => ({ to: `/book/${book.olId}`, 'aria-label': `${book.title} by ${authorLine(book.authors)}` });
 const bookShadow = '3px 2px 6px -2px rgb(60 35 18 / 0.5), 1px 0 0 rgb(0 0 0 / 0.12)';
 
-/** Clearly labelled placeholder — never styled to look like a real spine. */
-function UnavailableSpine({ width, height, label = 'Spine image unavailable' }) {
+/**
+ * Clearly labelled placeholder for a book with no verified spine photo.
+ * Dashed and translucent so it can never be mistaken for a real spine;
+ * the plain title is there only so you can tell which book it is.
+ */
+function PlaceholderSpine({ book, width, height, pending }) {
   return (
-    <span className="flex flex-col items-center justify-center gap-2 rounded-[3px] border border-dashed border-cocoa/35 bg-oat-50/55 text-cocoa-500" style={{ width, height }}>
-      <ImageOff className="size-3.5 shrink-0" />
-      <span className="text-[9.5px] font-medium tracking-[0.12em] uppercase [writing-mode:vertical-rl]">{label}</span>
-    </span>
-  );
-}
-
-function PendingSpine({ width, height }) {
-  return (
-    <span className="relative flex flex-col items-center justify-center gap-2 overflow-hidden rounded-[3px] bg-oat-50/40 text-cocoa-500" style={{ width, height }}>
-      <span className="skeleton absolute inset-0 rounded-none opacity-60" />
-      <Search className="relative size-3.5 shrink-0" />
-      <span className="relative text-[9.5px] font-medium tracking-[0.12em] uppercase [writing-mode:vertical-rl]">Finding spine…</span>
+    <span
+      className={cn('relative flex flex-col items-center gap-1.5 overflow-hidden rounded-[3px] border border-dashed border-cocoa/35 bg-oat-50/45 py-2 text-cocoa-500', pending && 'border-silver-600/50')}
+      style={{ width, height }}
+    >
+      {pending && <span className="skeleton absolute inset-0 rounded-none opacity-50" />}
+      {pending ? <Search className="relative size-3.5 shrink-0 animate-pulse" /> : <ImageOff className="relative size-3.5 shrink-0" />}
+      <span className="relative min-h-0 flex-1 overflow-hidden text-[10px] leading-none font-medium text-ellipsis whitespace-nowrap text-cocoa-600 [writing-mode:vertical-rl]">{book.title}</span>
+      <span className="relative shrink-0 text-[8px] font-semibold tracking-[0.12em] whitespace-nowrap text-cocoa-400 uppercase [writing-mode:vertical-rl]">{pending ? 'Finding spine' : 'No spine photo'}</span>
     </span>
   );
 }
@@ -193,17 +190,8 @@ export function UprightBook({ entry, onProgress }) {
   let body;
   if (hasPhoto(book) && !failed) {
     body = <SpinePhoto spine={book.spine} width={width} height={height} className="rounded-[2px]" onFail={() => setFailed(true)} />;
-  } else if (isPending(book)) {
-    body = <PendingSpine width={34} height={height} />;
-  } else if (book.coverId) {
-    body = (
-      <span className="relative block" style={{ width: Math.round(height * (2 / 3)), height }}>
-        <BookCover book={book} className="!size-full" rounded="rounded-[2px]" shadow={false} />
-        <span className="absolute inset-x-0 bottom-0 bg-cocoa-900/60 py-0.5 text-center text-[8.5px] font-medium tracking-[0.14em] text-oat-50 uppercase">Front cover</span>
-      </span>
-    );
   } else {
-    body = <UnavailableSpine width={40} height={height} />;
+    body = <PlaceholderSpine book={book} width={width} height={height} pending={isPending(book)} />;
   }
 
   return (

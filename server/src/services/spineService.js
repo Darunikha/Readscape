@@ -40,6 +40,7 @@ function clearedSpine(status) {
   return {
     status, imageUrl: '', thumbnailUrl: '', sourcePage: '', sourceName: '', provider: '', license: '', creator: '',
     width: null, height: null, box: null, view: '', confidence: null, verifiedBy: '', error: '',
+    queriesDone: 0, searchLevel: 0,
   };
 }
 
@@ -57,9 +58,12 @@ async function findSpine(book) {
   const author = book.authors?.[0] || '';
   const notRejected = (c) => !rejected.has(c.imageUrl) && !rejected.has(c.thumbnailUrl);
 
-  // 2 + 3. Search providers in order; verify in small batches.
+  // 2 + 3. Search providers in order; verify in small batches. A second, differently
+  // worded web search runs only if the first found nothing (max 2 SerpApi searches per book).
+  const serpQueries = [`"${book.title}" ${author} book spine`, `${book.title} ${author} book spine bookshelf`];
+  const alreadyDone = book.spine?.queriesDone || 0; // earlier attempts aren't repeated
   const sources = [
-    ['serpapi', () => serpApiImages(`"${book.title}" ${author} book spine`)],
+    ...serpQueries.slice(alreadyDone).map((q, i) => [`serpapi${alreadyDone + i}`, () => serpApiImages(q)]),
     ['openverse', () => openverseImages(`${book.title} ${author} book`)],
   ];
   for (const [name, search] of sources) {
@@ -71,7 +75,7 @@ async function findSpine(book) {
       searchCache.set(cacheKey, candidates);
     }
     candidates = candidates.filter(notRejected);
-    for (let i = 0; i < Math.min(candidates.length, BATCH * 2); i += BATCH) {
+    for (let i = 0; i < Math.min(candidates.length, BATCH * 3); i += BATCH) {
       const verified = await verifyCandidates(book, candidates.slice(i, i + BATCH), reference);
       const accepted = verified.filter(isAcceptable).sort((a, b) => score(b) - score(a));
       // Make sure the box frames ONE spine (several copies side by side are common).
@@ -105,9 +109,10 @@ async function processBook(bookId) {
         imageUrl: c.imageUrl, thumbnailUrl: c.thumbnailUrl, sourcePage: c.sourcePage, sourceName: c.sourceName,
         provider: c.provider, license: c.license, creator: c.creator, width: c.width, height: c.height,
         box: a.spineBox, view: a.view, confidence: Number(a.confidence) || null, verifiedBy: 'gemini', checkedAt: new Date(),
+        searchLevel: 2,
       });
     } else {
-      await setSpine(bookId, { ...clearedSpine('unavailable'), checkedAt: new Date() });
+      await setSpine(bookId, { ...clearedSpine('unavailable'), checkedAt: new Date(), queriesDone: 2, searchLevel: 2 });
     }
   } catch (err) {
     const id = String(bookId);
@@ -172,6 +177,11 @@ export async function requestSpines(bookIds, { force = false } = {}) {
 /** Re-queue anything left mid-flight by a restart. */
 export async function resumeSpineQueue() {
   if (!spineEnabled()) return;
+  // Books that found nothing with the older single-query search get one more, wider try.
+  await Book.updateMany(
+    { 'spine.status': 'unavailable', 'spine.searchLevel': { $not: { $gte: 2 } }, 'spine.verifiedBy': { $ne: 'user' } },
+    { $set: { 'spine.status': 'queued', 'spine.queriesDone': 1 } },
+  );
   const pending = await Book.find({ 'spine.status': { $in: ['queued', 'searching'] } }, '_id');
   for (const b of pending) { if (!queued.has(String(b._id))) { queued.add(String(b._id)); queue.push(String(b._id)); } }
   if (pending.length) { console.log(`[spines] resuming ${pending.length} queued book(s)`); run(); }
