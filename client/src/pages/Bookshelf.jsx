@@ -11,15 +11,17 @@ import BookCover from '../components/books/BookCover';
 import ShelfButton from '../components/books/ShelfButton';
 import AddBooksModal from '../components/books/AddBooksModal';
 import { Bookcase, Compartment } from '../components/books/Bookcase';
+import { BookPile, BudVase, FramedPrint, Globe } from '../components/decor/ShelfDecor';
 import Modal from '../components/ui/Modal';
 import Popover, { MenuItem } from '../components/ui/Popover';
 import { ErrorState, Field, ProgressBar, Segmented, Spinner, StarRating } from '../components/ui';
 
 const VIEW_KEY = 'readscape.shelfView';
+// One small arrangement per shelf, kept to the far end so books stay the focus.
 const SECTIONS = [
-  { key: 'reading', title: 'Currently Reading', empty: 'Nothing on the go — pick something to start.', faceOut: true },
-  { key: 'want', title: 'Want to Read', empty: 'Your next adventures will wait here.' },
-  { key: 'read', title: 'Read', empty: 'Finished books will gather here.' },
+  { key: 'reading', title: 'Currently Reading', empty: 'Nothing on the nightstand yet — pick a book to begin.', decor: <BudVase />, decorWidth: 52 },
+  { key: 'want', title: 'Want to Read', empty: 'Save the stories you’re dreaming of reading next.', decor: <FramedPrint />, decorWidth: 90 },
+  { key: 'read', title: 'Read', empty: 'Every book you finish will find its place here.', decor: <><BookPile className="w-[104px]" /><Globe /></>, decorWidth: 190 },
 ];
 const SORTS = [
   { value: 'added', label: 'Date added' },
@@ -243,33 +245,47 @@ export default function Bookshelf() {
           ))}
         </div>
       ) : (
-        <Bookcase>
-          {SECTIONS.map((s) => (
-            <Compartment
-              key={s.key}
-              id={s.key}
-              title={s.title}
-              count={data ? groups[s.key].length : null}
-              entries={groups[s.key]}
-              loading={!data}
-              faceOut={s.faceOut}
-              emptyText={hasFilters ? 'No matches on this shelf.' : s.empty}
-              onAdd={() => setAddTo(s.key)}
-              onProgress={openProgress}
-            />
-          ))}
-          {customShelves.map((shelf) => (
-            <CustomCompartment
-              key={shelf._id}
-              shelf={shelf}
-              query={query}
-              view="shelf"
-              onRename={(sh) => setNameModal({ mode: 'rename', shelf: sh })}
-              onDelete={deleteShelf}
-              onProgress={openProgress}
-            />
-          ))}
-        </Bookcase>
+        <div className="space-y-12 pt-16 sm:pt-20">
+          <Bookcase>
+            {SECTIONS.map((s) => (
+              <Compartment
+                key={s.key}
+                id={s.key}
+                title={s.title}
+                count={data ? groups[s.key].length : null}
+                entries={groups[s.key]}
+                loading={!data}
+                decor={s.decor}
+                decorWidth={s.decorWidth}
+                emptyText={hasFilters ? 'No matches on this shelf.' : s.empty}
+                onAdd={hasFilters ? undefined : () => setAddTo(s.key)}
+                onProgress={openProgress}
+              />
+            ))}
+          </Bookcase>
+
+          {customShelves.length > 0 && (
+            <section className="space-y-4">
+              <div>
+                <h2 className="section-title">My collections</h2>
+                <p className="text-sm text-cocoa-500">Your own shelves — add books from any book’s shelf menu.</p>
+              </div>
+              <Bookcase topDecor={false}>
+                {customShelves.map((shelf) => (
+                  <CustomCompartment
+                    key={shelf._id}
+                    shelf={shelf}
+                    query={query}
+                    view="shelf"
+                    onRename={(sh) => setNameModal({ mode: 'rename', shelf: sh })}
+                    onDelete={deleteShelf}
+                    onProgress={openProgress}
+                  />
+                ))}
+              </Bookcase>
+            </section>
+          )}
+        </div>
       )}
 
       <AddBooksModal open={Boolean(addTo)} initialStatus={addTo || 'want'} onClose={() => setAddTo(null)} />
