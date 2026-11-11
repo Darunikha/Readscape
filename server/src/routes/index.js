@@ -9,6 +9,7 @@ import * as custom from '../controllers/customShelfController.js';
 import * as reviews from '../controllers/reviewController.js';
 import * as challenge from '../controllers/challengeController.js';
 import * as users from '../controllers/userController.js';
+import * as spines from '../controllers/spineController.js';
 
 const router = Router();
 
@@ -35,6 +36,15 @@ router.get('/books/popular', books.popular);
 router.get('/books/new', books.newReleases);
 router.get('/books/recommended', requireAuth, books.recommended);
 router.get('/books/genre/:slug', books.byGenre);
+// Spine photographs + editions (these must come before /books/:olId)
+router.post('/spines/request', requireAuth, spines.request);
+router.get('/spines/status', requireAuth, spines.status);
+router.get('/books/:olId/spine', requireAuth, spines.getOne);
+router.post('/books/:olId/spine/retry', requireAuth, spines.retry);
+router.post('/books/:olId/spine/reject', requireAuth, spines.reject);
+router.put('/books/:olId/spine', requireAuth, spines.setManual);
+router.get('/books/:olId/editions', requireAuth, spines.editions);
+router.put('/books/:olId/edition', requireAuth, spines.setEdition);
 router.get('/books/:olId', optionalAuth, books.getBook);
 
 // Bookshelf (default shelves)

@@ -110,6 +110,27 @@ All routes are under `/api`. 🔒 means a JWT is required (`Authorization: Beare
 | Challenge 🔒 | `GET /challenge?year=`, `PUT /challenge` |
 | Community 🔒 | `GET /users?q=`, `GET /users/:username` (+ `/shelf`, `/reviews`, `/activity`, `/followers`, `/following`), `POST/DELETE /users/:username/follow`, `PATCH /users/me`, `GET /activity/feed`, `GET /activity/me` |
 
+## Real spine photographs
+
+The bookshelf shows **photographs of each book's real spine**, never generated artwork. Books are looked up once in the background and the results are cached on the book record:
+
+1. **Edition.** The ISBN-13/10, publisher and year are resolved from the edition whose cover you see (Open Library), then Google Books' English edition, then other Open Library editions. You can change the edition on any book's page.
+2. **Search.** Photos are searched with [SerpApi](https://serpapi.com) (Google Images, free plan of 250 searches a month), then [Openverse](https://openverse.org) (free, openly licensed photos).
+3. **Verification.** Google Gemini (free tier) checks each candidate against the edition's cover. A photo is accepted only if it's a genuine photograph, the spine is visible, the title on the spine matches, and a box can be drawn around exactly one spine.
+4. **Display.** The photo is cropped to that one spine, and rotated if needed for upright or stacked books. The source is credited in the hover card and on the book page.
+
+When no authentic photo is found, the shelf shows the **front cover** (labelled "Front cover"). If there's no cover either, it shows a labelled **"Spine image unavailable"** placeholder. On any book's page you can mark an image as wrong (it's never used again), search again, or paste your own photo.
+
+Add these to `server/.env` (all three have free tiers; without `GEMINI_API_KEY` spine search is switched off):
+
+| Variable | Where to get it |
+|---|---|
+| `GEMINI_API_KEY` | [Google AI Studio](https://aistudio.google.com) → API keys |
+| `GOOGLE_BOOKS_API_KEY` | Google Cloud console → enable *Books API* → Credentials → API key |
+| `SERPAPI_KEY` | [serpapi.com](https://serpapi.com) → free plan (optional; Openverse is used without it) |
+
+Optional tuning: `SPINE_DAILY_LIMIT` (books processed per day, default 80), `SERPAPI_RESERVE` (searches kept spare each month, default 10), `GEMINI_MODEL`.
+
 ## Design system
 
 Readscape uses only four palette colours, plus tints of each:

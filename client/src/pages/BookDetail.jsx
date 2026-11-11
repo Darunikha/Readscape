@@ -11,6 +11,7 @@ import BookCover from '../components/books/BookCover';
 import ShelfButton from '../components/books/ShelfButton';
 import ReviewForm from '../components/books/ReviewForm';
 import ReviewCard from '../components/books/ReviewCard';
+import SpinePanel from '../components/books/SpinePanel';
 import { EmptyState, ErrorState, ProgressBar, Segmented, Skeleton, StarRating } from '../components/ui';
 import { Bow, Sprig } from '../components/decor/Decor';
 import { formatDate, pluralize } from '../lib/utils';
@@ -146,6 +147,8 @@ export default function BookDetail() {
           </div>
         </div>
       </section>
+
+      <SpinePanel olId={book.olId} />
 
       <section className="space-y-6">
         <div className="flex items-center gap-3">

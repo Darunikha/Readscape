@@ -10,6 +10,7 @@ import { authorLine, formatDate, pluralize, SHELVES } from '../lib/utils';
 import BookCover from '../components/books/BookCover';
 import ShelfButton from '../components/books/ShelfButton';
 import AddBooksModal from '../components/books/AddBooksModal';
+import { useSpineLookups } from '../components/books/SpineBooks';
 import { Bookcase, Compartment } from '../components/books/Bookcase';
 import { CandleJar, CatOnBooks, DaisyVase, FramedPrint, Globe, JarBouquet, LyingBooks, TrailingPlant, UprightSpines } from '../components/decor/ShelfDecor';
 import Modal from '../components/ui/Modal';
@@ -117,6 +118,7 @@ function ListSection({ title, entries, onProgress }) {
 function CustomCompartment({ shelf, query, view, onRename, onDelete, onProgress }) {
   const { version } = useShelf();
   const { data, loading, error, reload } = useApi(`/custom-shelves/${shelf._id}/books?${query}`, [version]);
+  useSpineLookups(data?.entries, reload);
   const entries = data?.entries || [];
 
   if (view === 'list') return <ListSection title={shelf.name} entries={entries} onProgress={onProgress} />;
@@ -162,6 +164,7 @@ export default function Bookshelf() {
 
   const query = new URLSearchParams({ sort, ...(debouncedQ && { q: debouncedQ }), ...(genre && { genre }) }).toString();
   const { data, loading, error, reload } = useApi(`/shelf?status=all&${query}`, [version]);
+  useSpineLookups(data?.entries, reload);
 
   const groups = useMemo(() => {
     const g = { reading: [], want: [], read: [] };
