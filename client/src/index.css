@@ -199,3 +199,28 @@
     inset 18px 0 20px -16px rgb(40 26 18 / 0.45),
     inset -18px 0 20px -16px rgb(40 26 18 / 0.45);
 }
+
+/* Honey-toned wood + soft window light for the bookcase (reference look) */
+@utility honey-wood {
+  background-color: #dcaa7c;
+  background-image:
+    linear-gradient(90deg, rgb(90 55 30 / 0.22), rgb(255 255 255 / 0.12) 4%, rgb(255 255 255 / 0.18) 50%, rgb(255 255 255 / 0.1) 96%, rgb(90 55 30 / 0.24)),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='360' height='360'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.012 0.4' numOctaves='4' seed='11'/%3E%3CfeColorMatrix values='0 0 0 0 0.45 0 0 0 0 0.27 0 0 0 0 0.15 0 0 0 0.2 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+}
+@utility honey-back {
+  background-color: #dca47a;
+  background-image:
+    radial-gradient(ellipse 70% 60% at 55% 40%, rgb(255 228 196 / 0.38), transparent 70%),
+    linear-gradient(180deg, rgb(90 55 30 / 0.1), transparent 20%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='360' height='360'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.4 0.012' numOctaves='4' seed='5'/%3E%3CfeColorMatrix values='0 0 0 0 0.45 0 0 0 0 0.27 0 0 0 0 0.15 0 0 0 0.13 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+  box-shadow:
+    inset 0 20px 26px -16px rgb(90 50 25 / 0.45),
+    inset 22px 0 26px -20px rgb(90 50 25 / 0.4),
+    inset -22px 0 26px -20px rgb(90 50 25 / 0.4);
+}
+@utility window-light {
+  background:
+    linear-gradient(116deg, transparent 0 14%, rgb(255 240 215 / 0.2) 19%, rgb(255 240 215 / 0.05) 27%, transparent 31%,
+      transparent 44%, rgb(255 240 215 / 0.16) 49%, rgb(255 240 215 / 0.04) 57%, transparent 61%,
+      transparent 72%, rgb(255 240 215 / 0.12) 76%, transparent 84%);
+}

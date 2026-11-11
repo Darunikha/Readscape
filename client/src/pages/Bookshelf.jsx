@@ -11,17 +11,35 @@ import BookCover from '../components/books/BookCover';
 import ShelfButton from '../components/books/ShelfButton';
 import AddBooksModal from '../components/books/AddBooksModal';
 import { Bookcase, Compartment } from '../components/books/Bookcase';
-import { BookPile, BudVase, FramedPrint, Globe } from '../components/decor/ShelfDecor';
+import { CandleJar, CatOnBooks, DaisyVase, FramedPrint, Globe, JarBouquet, LyingBooks, TrailingPlant, UprightSpines } from '../components/decor/ShelfDecor';
 import Modal from '../components/ui/Modal';
 import Popover, { MenuItem } from '../components/ui/Popover';
 import { ErrorState, Field, ProgressBar, Segmented, Spinner, StarRating } from '../components/ui';
 
 const VIEW_KEY = 'readscape.shelfView';
-// One small arrangement per shelf, kept to the far end so books stay the focus.
+// Each shelf gets a small arrangement on either side; books stay centre stage.
 const SECTIONS = [
-  { key: 'reading', title: 'Currently Reading', empty: 'Nothing on the nightstand yet — pick a book to begin.', decor: <BudVase />, decorWidth: 52 },
-  { key: 'want', title: 'Want to Read', empty: 'Save the stories you’re dreaming of reading next.', decor: <FramedPrint />, decorWidth: 90 },
-  { key: 'read', title: 'Read', empty: 'Every book you finish will find its place here.', decor: <><BookPile className="w-[104px]" /><Globe /></>, decorWidth: 190 },
+  {
+    key: 'reading',
+    title: 'Currently Reading',
+    empty: 'Nothing on the nightstand yet — pick a book to begin.',
+    left: <><TrailingPlant trail={84} /><CatOnBooks className="-ml-2" /></>,
+    right: <><JarBouquet /><UprightSpines className="-ml-3" /></>,
+  },
+  {
+    key: 'want',
+    title: 'Want to Read',
+    empty: 'Save the stories you’re dreaming of reading next.',
+    left: <><FramedPrint /><CandleJar className="ml-2" /></>,
+    right: <><LyingBooks className="w-[110px]" /><TrailingPlant trail={170} side="right" className="-ml-6 mb-[52px]" /></>,
+  },
+  {
+    key: 'read',
+    title: 'Read',
+    empty: 'Every book you finish will find its place here.',
+    left: <><UprightSpines /><DaisyVase className="-ml-2" /></>,
+    right: <><Globe /><LyingBooks count={2} className="-ml-4 w-[96px]" /></>,
+  },
 ];
 const SORTS = [
   { value: 'added', label: 'Date added' },
@@ -245,7 +263,7 @@ export default function Bookshelf() {
           ))}
         </div>
       ) : (
-        <div className="space-y-12 pt-16 sm:pt-20">
+        <div className="space-y-12 pt-8">
           <Bookcase>
             {SECTIONS.map((s) => (
               <Compartment
@@ -255,8 +273,8 @@ export default function Bookshelf() {
                 count={data ? groups[s.key].length : null}
                 entries={groups[s.key]}
                 loading={!data}
-                decor={s.decor}
-                decorWidth={s.decorWidth}
+                left={s.left}
+                right={s.right}
                 emptyText={hasFilters ? 'No matches on this shelf.' : s.empty}
                 onAdd={hasFilters ? undefined : () => setAddTo(s.key)}
                 onProgress={openProgress}
@@ -270,7 +288,7 @@ export default function Bookshelf() {
                 <h2 className="section-title">My collections</h2>
                 <p className="text-sm text-cocoa-500">Your own shelves — add books from any book’s shelf menu.</p>
               </div>
-              <Bookcase topDecor={false}>
+              <Bookcase bow={false}>
                 {customShelves.map((shelf) => (
                   <CustomCompartment
                     key={shelf._id}
