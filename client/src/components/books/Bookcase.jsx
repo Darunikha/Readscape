@@ -1,5 +1,5 @@
 import { Fragment, useLayoutEffect, useRef, useState } from 'react';
-import { BookStackGroup, hash, isLyingPhoto, stackWidth, UprightBook, uprightWidth } from './SpineBooks';
+import { BookStackGroup, CoverBook, hash, isLyingPhoto, stackWidth, UprightBook, uprightWidth } from './SpineBooks';
 import { Plus } from 'lucide-react';
 import { Sparkle } from '../decor/Decor';
 import { CornerBow } from '../decor/ShelfDecor';
@@ -179,7 +179,7 @@ function EmptyShelf({ text, onAdd }) {
  * One shelf of the bookcase.
  * `left` sits under the label on the left; `right` stands at the right end.
  */
-export function Compartment({ id, title, count, entries, loading, onAdd, onProgress, emptyText, menu, left, right }) {
+export function Compartment({ id, title, count, entries, loading, onAdd, onProgress, emptyText, menu, left, right, mode = 'spines' }) {
   // Measure the book area so the arrangement can plan full rows.
   const rowRef = useRef(null);
   const [capacity, setCapacity] = useState(0);
@@ -193,20 +193,22 @@ export function Compartment({ id, title, count, entries, loading, onAdd, onProgr
     return () => ro.disconnect();
   }, []);
 
+  // Covers view with books: the books use the full shelf width (label above, no side ornaments).
+  const wide = mode === 'covers' && !loading && entries.length > 0;
   return (
     <section id={`shelf-${id}`} className="relative scroll-mt-28">
-      {/* small screens: label above the books */}
-      <div className="flex items-center justify-between px-3 pt-4 md:hidden">
+      {/* label above the books (small screens, and the wide Covers layout) */}
+      <div className={cn('flex items-center justify-between px-3 pt-4 sm:px-5', !wide && 'md:hidden')}>
         <div className="flex items-center gap-2"><ShelfLabel title={title} count={count} /><AddButton title={title} onAdd={onAdd} /></div>
         {menu}
       </div>
-      {menu && <div className="absolute top-3 right-3 z-10 hidden md:block">{menu}</div>}
+      {menu && !wide && <div className="absolute top-3 right-3 z-10 hidden md:block">{menu}</div>}
 
       <div
-        className="grid grid-cols-1 md:grid-cols-[220px_minmax(0,1fr)] xl:grid-cols-[260px_minmax(0,1fr)_230px]"
+        className={cn('grid grid-cols-1', !wide && 'md:grid-cols-[220px_minmax(0,1fr)] xl:grid-cols-[260px_minmax(0,1fr)_230px]')}
         style={{ backgroundImage: SHELF_ROWS_BG }}
       >
-        <div className="hidden flex-col items-start justify-between pt-4 pl-5 md:flex" style={{ height: ROW }}>
+        <div className={cn('hidden flex-col items-start justify-between pt-4 pl-5', !wide && 'md:flex')} style={{ height: ROW }}>
           <div className="flex items-center gap-2"><ShelfLabel title={title} count={count} /><AddButton title={title} onAdd={entries?.length ? onAdd : undefined} /></div>
           <div className="pointer-events-none flex origin-bottom-left scale-100 items-end gap-1 xl:scale-[1.15]">{left}</div>
         </div>
@@ -220,8 +222,11 @@ export function Compartment({ id, title, count, entries, loading, onAdd, onProgr
             <EmptyShelf text={emptyText} onAdd={onAdd} />
           ) : (
             <>
-              {/* Each upright book is its own slot so long runs can wrap book-by-book without gaps. */}
-              {fitToRows(arrange(entries, id), capacity).map((g) => (
+              {mode === 'covers' && entries.map((e) => (
+                <Slot key={e.book._id} className="px-2.5"><CoverBook entry={e} onProgress={onProgress} /></Slot>
+              ))}
+              {/* Spines: each upright book is its own slot so long runs can wrap book-by-book without gaps. */}
+              {mode !== 'covers' && fitToRows(arrange(entries, id), capacity).map((g) => (
                 <Fragment key={g.items[0].book._id}>
                   {g.type === 'stack' ? (
                     <Slot className="mx-4">
@@ -240,7 +245,7 @@ export function Compartment({ id, title, count, entries, loading, onAdd, onProgr
           )}
         </div>
 
-        <div className="pointer-events-none hidden items-end justify-end pr-5 xl:flex" style={{ height: ROW }}>
+        <div className={cn('pointer-events-none hidden items-end justify-end pr-5', !wide && 'xl:flex')} style={{ height: ROW }}>
           <div className="flex origin-bottom-right scale-[1.1] items-end gap-1">{right}</div>
         </div>
       </div>

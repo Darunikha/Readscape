@@ -15,7 +15,7 @@ import ShelfButton from './ShelfButton';
 import BookCover from './BookCover';
 import { ProgressBar, StarRating } from '../ui';
 import { api } from '../../lib/api';
-import { authorLine, cn, SHELVES } from '../../lib/utils';
+import { authorLine, cn, coverUrl, SHELVES } from '../../lib/utils';
 
 export const hash = (s = '') => [...String(s)].reduce((h, c) => (h * 33 + c.charCodeAt(0)) >>> 0, 5381);
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -232,6 +232,63 @@ export function UprightBook({ entry, onProgress }) {
           aria-hidden
         />
       )}
+    </BookOnShelf>
+  );
+}
+
+/**
+ * A book standing face-out with its real front cover (the "Covers" view).
+ * The cover keeps its natural proportions; if a book has no cover image at all,
+ * BookCover draws a plain title/author cover.
+ */
+export function CoverBook({ entry, onProgress }) {
+  const { book } = entry;
+  const height = 184 + (hash(book.olId) % 5) * 5; // 184–204px
+  const [state, setState] = useState(book.coverId ? 'loading' : 'fallback');
+  const [ratio, setRatio] = useState(2 / 3);
+  const width = Math.round(height * ratio);
+  const src = coverUrl(book.coverId, 'M');
+
+  const onLoad = (e) => {
+    const { naturalWidth: w, naturalHeight: h } = e.currentTarget;
+    if (w < 10) { setState('fallback'); return; } // Open Library's 1×1 "no cover" pixel
+    setRatio(clamp(w / h, 0.5, 0.9));
+    setState('ok');
+  };
+
+  return (
+    <BookOnShelf entry={entry} onProgress={onProgress}>
+      <div className="relative transition duration-300 ease-out group-hover/book:-translate-y-2.5" style={{ height, width }}>
+        <span className="pointer-events-none absolute -bottom-1.5 left-[4%] h-3 w-full rounded-[50%] bg-[#5a3219]/35 blur-[4px]" />
+        <Link
+          {...linkProps(book)}
+          className="relative block size-full overflow-hidden rounded-[2px] rounded-r-[4px] shadow-[4px_4px_10px_-2px_rgb(70_40_20/0.45),1px_0_0_rgb(70_40_20/0.15)]"
+        >
+          {state === 'fallback' ? (
+            <BookCover book={{ ...book, coverId: null }} className="!size-full" rounded="rounded-none" shadow={false} />
+          ) : (
+            <>
+              {state === 'loading' && <span className="skeleton absolute inset-0 rounded-none" />}
+              <img
+                src={src}
+                srcSet={`${coverUrl(book.coverId, 'M')} 1x, ${coverUrl(book.coverId, 'L')} 2x`}
+                alt=""
+                loading="lazy"
+                onLoad={onLoad}
+                onError={() => setState('fallback')}
+                className={cn('size-full object-contain transition-opacity duration-500', state === 'ok' ? 'opacity-100' : 'opacity-0')}
+              />
+              <span className="pointer-events-none absolute inset-y-0 left-0 w-[6%] bg-gradient-to-r from-black/25 via-white/10 to-transparent" />
+            </>
+          )}
+        </Link>
+        {entry.status === 'reading' && (
+          <div className="pointer-events-none absolute inset-x-1.5 bottom-1.5 flex items-center gap-1.5 rounded-full bg-oat-50/95 px-2 py-0.5 shadow-soft">
+            <ProgressBar value={entry.progress} size="sm" />
+            <span className="text-[10px] font-semibold text-cocoa-700">{entry.progress}%</span>
+          </div>
+        )}
+      </div>
     </BookOnShelf>
   );
 }

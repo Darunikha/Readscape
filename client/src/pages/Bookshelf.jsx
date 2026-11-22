@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
-import { ArrowUpDown, FolderPlus, Library, List, MoreHorizontal, Pencil, Plus, Search, Trash2, X } from 'lucide-react';
+import { ArrowUpDown, BookImage, FolderPlus, Library, List, MoreHorizontal, Pencil, Plus, Search, Trash2, X } from 'lucide-react';
 import { useShelf } from '../context/ShelfContext';
 import { useConfirm } from '../context/ConfirmContext';
 import { useToast } from '../context/ToastContext';
@@ -125,6 +125,7 @@ function CustomCompartment({ shelf, query, view, onRename, onDelete, onProgress 
   if (error) return <div className="bookcase-panel p-6"><ErrorState error={error} onRetry={reload} /></div>;
   return (
     <Compartment
+      mode={view === 'covers' ? 'covers' : 'spines'}
       id={shelf._id}
       title={shelf.name}
       count={data ? entries.length : null}
@@ -152,7 +153,7 @@ export default function Bookshelf() {
   const confirm = useConfirm();
   const toast = useToast();
 
-  const [view, setView] = useState(() => { try { return localStorage.getItem(VIEW_KEY) === 'list' ? 'list' : 'shelf'; } catch { return 'shelf'; } });
+  const [view, setView] = useState(() => { try { const v = localStorage.getItem(VIEW_KEY); return v === 'list' || v === 'covers' ? v : 'shelf'; } catch { return 'shelf'; } });
   const [q, setQ] = useState('');
   const [genre, setGenre] = useState('');
   const [sort, setSort] = useState('added');
@@ -246,7 +247,7 @@ export default function Bookshelf() {
           className="ml-auto"
           value={view}
           onChange={setView}
-          options={[{ value: 'shelf', icon: Library, ariaLabel: 'Bookcase view' }, { value: 'list', icon: List, ariaLabel: 'List view' }]}
+          options={[{ value: 'shelf', icon: Library, label: 'Spines', ariaLabel: 'Spines view' }, { value: 'covers', icon: BookImage, label: 'Covers', ariaLabel: 'Covers view' }, { value: 'list', icon: List, ariaLabel: 'List view' }]}
         />
       </div>
       {hasFilters && (
@@ -271,6 +272,7 @@ export default function Bookshelf() {
             {SECTIONS.map((s) => (
               <Compartment
                 key={s.key}
+                mode={view === 'covers' ? 'covers' : 'spines'}
                 id={s.key}
                 title={s.title}
                 count={data ? groups[s.key].length : null}
@@ -297,7 +299,7 @@ export default function Bookshelf() {
                     key={shelf._id}
                     shelf={shelf}
                     query={query}
-                    view="shelf"
+                    view={view}
                     onRename={(sh) => setNameModal({ mode: 'rename', shelf: sh })}
                     onDelete={deleteShelf}
                     onProgress={openProgress}
