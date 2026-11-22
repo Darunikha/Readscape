@@ -38,6 +38,9 @@ function photoGeom(spine, natural) {
   return { W, H, x1, y1, bw, bh, vertical: bh >= bw, ratio: Math.max(bw, bh) / Math.min(bw, bh) };
 }
 
+/** True when the spine in the photo runs sideways, i.e. the book was photographed lying flat. */
+export const isLyingPhoto = (book) => hasPhoto(book) && !photoGeom(book.spine).vertical;
+
 /** Long-side ÷ short-side of the spine region in the photo. */
 export const spineRatio = (spine) => photoGeom(spine).ratio;
 

@@ -1,5 +1,5 @@
 import { Fragment, useLayoutEffect, useRef, useState } from 'react';
-import { BookStackGroup, hasPhoto, hash, stackWidth, UprightBook, uprightWidth } from './SpineBooks';
+import { BookStackGroup, hash, isLyingPhoto, stackWidth, UprightBook, uprightWidth } from './SpineBooks';
 import { Plus } from 'lucide-react';
 import { Sparkle } from '../decor/Decor';
 import { CornerBow } from '../decor/ShelfDecor';
@@ -30,7 +30,7 @@ const SPINE_GAP = 3;
 const STACK_MARGIN = 16; // each side
 
 /*
- * Only books with a verified spine PHOTO can lie in a stack (their spine is what
+ * Only books whose spine PHOTO was taken lying flat go in a stack (their spine is what
  * you see). Books shown by their cover or a placeholder always stand upright.
  */
 export function arrange(entries, seed) {
@@ -47,7 +47,7 @@ export function arrange(entries, seed) {
       const want = Math.min(3 + (next() % 2), rest.length);
       const picked = [];
       for (let k = 0; k < Math.min(rest.length, 8) && picked.length < want; k += 1) {
-        if (hasPhoto(rest[k].book)) picked.push(rest[k]);
+        if (isLyingPhoto(rest[k].book)) picked.push(rest[k]);
       }
       if (picked.length >= 2) {
         groups.push({ type: 'stack', items: picked });
@@ -102,7 +102,7 @@ export function fitToRows(groups, capacity) {
   //    earlier stack (max 5 high) when that stack's row has room for any growth.
   const last = rows.at(-1);
   // Only books with a real spine photo may lie in a stack.
-  if (rows.length > 1 && last.items.length <= 2 && last.items.every((i) => i.entry && hasPhoto(i.entry.book))) {
+  if (rows.length > 1 && last.items.length <= 2 && last.items.every((i) => i.entry && isLyingPhoto(i.entry.book))) {
     const loose = last.items.map((i) => i.entry);
     for (let r = rows.length - 2; r >= 0; r -= 1) {
       const stackItem = rows[r].items.find((i) => !i.entry && i.group.items.length + loose.length <= 5);
