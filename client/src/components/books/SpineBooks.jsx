@@ -60,9 +60,25 @@ export const stackWidth = (entries) => Math.max(...entries.map((e) => lyingLengt
  * Crops only as much as needed and rotates when the photo's spine runs the other way.
  */
 export function SpinePhoto({ spine, width, height, className, onFail }) {
-  const [src, setSrc] = useState(spine.imageUrl || spine.thumbnailUrl);
+  const thumb = spine.thumbnailUrl || '';
+  const full = spine.imageUrl || '';
+  const [src, setSrc] = useState(thumb || full);
   const [natural, setNatural] = useState(null);
-  useEffect(() => { setSrc(spine.imageUrl || spine.thumbnailUrl); setNatural(null); }, [spine.imageUrl, spine.thumbnailUrl]);
+  const failed = useRef(new Set());
+
+  // Show the small, fast thumbnail straight away; swap to the sharp original once it has loaded.
+  useEffect(() => {
+    failed.current = new Set();
+    setSrc(thumb || full);
+    setNatural(null);
+    if (!thumb || !full || thumb === full) return undefined;
+    let alive = true;
+    const probe = new Image();
+    probe.referrerPolicy = 'no-referrer';
+    probe.onload = () => { if (alive && probe.naturalWidth > 10) setSrc(full); };
+    probe.src = full;
+    return () => { alive = false; };
+  }, [thumb, full]);
 
   const g = photoGeom(spine, natural);
   const wantVertical = height >= width;
@@ -78,7 +94,9 @@ export function SpinePhoto({ spine, width, height, className, onFail }) {
   const turn = rotate ? (g.vertical ? -90 : 90) : 0;
 
   const onError = () => {
-    if (spine.thumbnailUrl && src !== spine.thumbnailUrl) setSrc(spine.thumbnailUrl);
+    failed.current.add(src);
+    const next = [thumb, full].find((u) => u && !failed.current.has(u));
+    if (next) setSrc(next);
     else onFail?.();
   };
 
