@@ -5,7 +5,7 @@
   "main": "src/index.js",
   "scripts": {
     "test": "node --test --test-concurrency=1 tests/*.test.js",
-    "dev": "node --watch src/index.js",
+    "dev": "node --watch-path=./src src/index.js",
     "start": "node src/index.js"
   },
   "license": "ISC",
