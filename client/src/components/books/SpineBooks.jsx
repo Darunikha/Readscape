@@ -28,7 +28,8 @@ export const isPending = (book) => PENDING.includes(book.spine?.status) || (!boo
 export const hasPhoto = (book) => ['found', 'angled'].includes(book.spine?.status) && Boolean(book.spine.imageUrl || book.spine.thumbnailUrl);
 
 /** Geometry of the spine region inside the photo. */
-function photoGeom(sp, natural) {
+function photoGeom(spine, natural) {
+  const sp = spine || {};
   const W = natural?.w || sp.width || 1000;
   const H = natural?.h || sp.height || 1000;
   const [y1, x1, y2, x2] = sp.box?.length === 4 ? sp.box : [0, 0, 1000, 1000];

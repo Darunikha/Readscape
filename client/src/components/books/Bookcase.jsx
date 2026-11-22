@@ -101,7 +101,8 @@ export function fitToRows(groups, capacity) {
   // 2. Don't strand one or two books on a board of their own: tuck them onto an
   //    earlier stack (max 5 high) when that stack's row has room for any growth.
   const last = rows.at(-1);
-  if (rows.length > 1 && last.items.length <= 2 && last.items.every((i) => i.entry)) {
+  // Only books with a real spine photo may lie in a stack.
+  if (rows.length > 1 && last.items.length <= 2 && last.items.every((i) => i.entry && hasPhoto(i.entry.book))) {
     const loose = last.items.map((i) => i.entry);
     for (let r = rows.length - 2; r >= 0; r -= 1) {
       const stackItem = rows[r].items.find((i) => !i.entry && i.group.items.length + loose.length <= 5);
