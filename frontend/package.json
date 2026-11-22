@@ -1,5 +1,5 @@
 {
-  "name": "readscape-client",
+  "name": "readscape-frontend",
   "version": "1.0.0",
   "scripts": {
     "dev": "npm --prefix .. run dev",

@@ -22,11 +22,11 @@ A personal book discovery and reading-tracking platform: your own digital librar
 **Requirements:** Node.js 20 or newer. MongoDB is optional for development (see below).
 
 ```bash
-# 1. Install everything (root, server and client)
+# 1. Install everything (root, backend and frontend)
 npm run install:all
 
 # 2. Configure the API (the defaults work out of the box)
-cp server/.env.example server/.env
+cp backend/.env.example backend/.env
 
 # 3. Run the API (port 5000) and the web app (port 5173) together
 npm run dev
@@ -36,10 +36,10 @@ Open **http://localhost:5173** and create an account.
 
 ### Database
 
-- **No MongoDB installed?** Leave `MONGO_URI` empty. The server starts an embedded MongoDB (via `mongodb-memory-server`) and keeps its data in `server/.data/`, so your library survives restarts. The first start downloads a MongoDB binary, which takes a minute.
-- **Own MongoDB or Atlas:** set `MONGO_URI=mongodb://localhost:27017/readscape` (or your Atlas connection string) in `server/.env`.
+- **No MongoDB installed?** Leave `MONGO_URI` empty. The server starts an embedded MongoDB (via `mongodb-memory-server`) and keeps its data in `backend/.data/`, so your library survives restarts. The first start downloads a MongoDB binary, which takes a minute.
+- **Own MongoDB or Atlas:** set `MONGO_URI=mongodb://localhost:27017/readscape` (or your Atlas connection string) in `backend/.env`.
 
-### Environment variables (`server/.env`)
+### Environment variables (`backend/.env`)
 
 | Variable | Default | Notes |
 |---|---|---|
@@ -49,7 +49,7 @@ Open **http://localhost:5173** and create an account.
 | `JWT_EXPIRES_IN` | `7d` | Session length |
 | `CLIENT_URL` | `http://localhost:5173` | Allowed CORS origin in production |
 
-The client proxies `/api` to `localhost:5000` in development. For a separately hosted API, build the client with `VITE_API_URL=https://your-api.example.com/api`.
+The frontend proxies `/api` to `localhost:5000` in development. For a separately hosted API, build the frontend with `VITE_API_URL=https://your-api.example.com/api`.
 
 ### Scripts
 
@@ -57,14 +57,14 @@ The client proxies `/api` to `localhost:5000` in development. For a separately h
 |---|---|
 | `npm run dev` | API and web app with live reload |
 | `npm test` | Backend integration tests (in-memory MongoDB) |
-| `npm run build` | Production build of the client into `client/dist` |
+| `npm run build` | Production build of the frontend into `frontend/dist` |
 | `npm start` | Start the API in production mode |
 
 ## Project structure
 
 ```
 readscape/
-├── server/
+├── backend/
 │   ├── src/
 │   │   ├── config/        env + database connection (embedded DB fallback)
 │   │   ├── models/        User, Book, UserBook, Review, CustomShelf,
@@ -75,7 +75,7 @@ readscape/
 │   │   ├── routes/        REST routes under /api
 │   │   └── utils/         genres, HTTP errors
 │   └── tests/             end-to-end journey tests
-└── client/
+└── frontend/
     └── src/
         ├── context/       Auth, Toast, Confirm dialog, Shelf (global shelf state + progress modal)
         ├── components/
@@ -121,7 +121,7 @@ The bookshelf shows **photographs of each book's real spine**, never generated a
 
 When no authentic photo is found, the shelf shows the **front cover** (labelled "Front cover"). If there's no cover either, it shows a labelled **"Spine image unavailable"** placeholder. On any book's page you can mark an image as wrong (it's never used again), search again, or paste your own photo.
 
-Add these to `server/.env` (all three have free tiers; without `GEMINI_API_KEY` spine search is switched off):
+Add these to `backend/.env` (all three have free tiers; without `GEMINI_API_KEY` spine search is switched off):
 
 | Variable | Where to get it |
 |---|---|
@@ -142,7 +142,7 @@ Readscape uses only four palette colours, plus tints of each:
 | Silver Veil (`silver`) | `#93A8AD` | Progress bars, secondary accents, leaves |
 | Creamy Oat (`oat`) | `#F9E7C7` | Backgrounds and warm surfaces |
 
-Headings use *Cormorant Garamond* and body text uses *DM Sans*. Both are bundled locally via Fontsource. Tokens live in `client/src/index.css` (`@theme`).
+Headings use *Cormorant Garamond* and body text uses *DM Sans*. Both are bundled locally via Fontsource. Tokens live in `frontend/src/index.css` (`@theme`).
 
 ## Testing
 

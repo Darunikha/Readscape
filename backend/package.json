@@ -1,5 +1,5 @@
 {
-  "name": "readscape-server",
+  "name": "readscape-backend",
   "version": "1.0.0",
   "description": "Readscape REST API",
   "main": "src/index.js",

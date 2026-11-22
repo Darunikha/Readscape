@@ -3,11 +3,11 @@
   "private": true,
   "description": "Readscape — a personal book discovery & reading-tracking platform",
   "scripts": {
-    "install:all": "npm install && npm --prefix server install && npm --prefix client install",
-    "dev": "concurrently -n api,web -c yellow,cyan \"npm --prefix server run dev\" \"npm --prefix client run web\"",
-    "build": "npm --prefix client run build",
-    "start": "npm --prefix server start",
-    "test": "npm --prefix server test"
+    "install:all": "npm install && npm --prefix backend install && npm --prefix frontend install",
+    "dev": "concurrently -n api,web -c yellow,cyan \"npm --prefix backend run dev\" \"npm --prefix frontend run web\"",
+    "build": "npm --prefix frontend run build",
+    "start": "npm --prefix backend start",
+    "test": "npm --prefix backend test"
   },
   "devDependencies": {
     "concurrently": "^10.0.7"
