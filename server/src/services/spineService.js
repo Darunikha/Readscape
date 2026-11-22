@@ -11,7 +11,7 @@
 import Book from '../models/Book.js';
 import { resolveEdition } from './editionService.js';
 import { openverseImages, serpApiImages } from './imageSearch.js';
-import { boxRatio, isAcceptable, locateSpine, MIN_SPINE_RATIO, RateLimitError, refineBox, score, verifyCandidates } from './spineVerifier.js';
+import { boxRatio, fetchImage, isAcceptable, locateSpine, MIN_SPINE_RATIO, RateLimitError, refineBox, score, verifyCandidates, verifyCrop } from './spineVerifier.js';
 
 const MIN_GAP_MS = Number(process.env.SPINE_MIN_GAP_MS ?? 7000); // stay under free-tier RPM
 const DAILY_LIMIT = Number(process.env.SPINE_DAILY_LIMIT ?? 80); // books processed per day
@@ -40,7 +40,7 @@ function clearedSpine(status) {
   return {
     status, imageUrl: '', thumbnailUrl: '', sourcePage: '', sourceName: '', provider: '', license: '', creator: '',
     width: null, height: null, box: null, view: '', confidence: null, verifiedBy: '', error: '',
-    queriesDone: 0, searchLevel: 0,
+    queriesDone: 0, searchLevel: 0, cropChecked: false,
   };
 }
 
@@ -78,13 +78,22 @@ async function findSpine(book) {
     for (let i = 0; i < Math.min(candidates.length, BATCH * 3); i += BATCH) {
       const verified = await verifyCandidates(book, candidates.slice(i, i + BATCH), reference);
       const accepted = verified.filter(isAcceptable).sort((a, b) => score(b) - score(a));
-      // Make sure the box frames ONE spine (several copies side by side are common).
+      // The box must frame ONE spine, and the exact cropped region must be a clean spine
+      // (no cover artwork, no neighbouring books) before it is ever shown.
       for (const best of accepted.slice(0, 3)) {
-        const { candidate: c, assessment: a } = best;
+        const { candidate: c, assessment: a, image } = best;
         const need = MIN_SPINE_RATIO[a.view] || MIN_SPINE_RATIO.spine;
-        if (boxRatio(a.spineBox, c.width, c.height) >= need) return best;
-        const refined = await refineBox(book, c).catch((err) => { if (err instanceof RateLimitError) throw err; return null; });
-        if (refined && boxRatio(refined, c.width, c.height) >= need) return { candidate: c, assessment: { ...a, spineBox: refined } };
+        const goodCrop = async (box) => {
+          const ratio = boxRatio(box, c.width, c.height);
+          if (ratio < need) return false;
+          const cc = await verifyCrop(book, image, box).catch(onlyRateLimit);
+          if (cc === undefined) return false;
+          if (cc === null) return ratio >= 5; // image can't be cropped for checking: trust only clearly spine-shaped boxes
+          return cc.clean;
+        };
+        if (await goodCrop(a.spineBox)) return { candidate: c, assessment: a };
+        const refined = await refineBox(book, c).catch(onlyRateLimit);
+        if (refined && await goodCrop(refined)) return { candidate: c, assessment: { ...a, spineBox: refined } };
       }
       await new Promise((r) => setTimeout(r, MIN_GAP_MS));
     }
@@ -94,7 +103,57 @@ async function findSpine(book) {
 
 const clearCache = (id) => { for (const k of searchCache.keys()) if (k.startsWith(`${id}:`)) searchCache.delete(k); };
 
-async function processBook(bookId) {
+// Re-throw quota/overload errors (the book is retried later); treat anything else as "no result".
+function onlyRateLimit(err) {
+  if (err instanceof RateLimitError) throw err;
+  return undefined;
+}
+
+/**
+ * Re-checks a stored result with the crop check. Photos whose displayed region
+ * isn't a clean single spine are rejected (never reused) and the book is searched again.
+ */
+async function auditBook(bookId) {
+  const book = await Book.findById(bookId);
+  if (!book || book.spine?.cropChecked || book.spine?.verifiedBy === 'user' || !['found', 'angled'].includes(book.spine?.status)) return;
+  const source = { thumbnailUrl: book.spine.thumbnailUrl || book.spine.imageUrl };
+  const image = await fetchImage(source.thumbnailUrl, 2 * 1024 * 1024).catch(() => null);
+  if (!image) { await setSpine(bookId, { cropChecked: true }); return; } // image unreachable now; leave it as it was
+  const need = MIN_SPINE_RATIO[book.spine.view] || MIN_SPINE_RATIO.spine;
+  const ok = async (box) => {
+    if (!box || boxRatio(box, book.spine.width, book.spine.height) < need) return false;
+    const cc = await verifyCrop(book, image, box).catch(onlyRateLimit);
+    if (cc === undefined) return false;
+    return cc === null ? true : cc.clean;
+  };
+  if (await ok(book.spine.box)) { await setSpine(bookId, { cropChecked: true }); return; }
+  const refined = await refineBox(book, source).catch(onlyRateLimit);
+  if (refined && await ok(refined)) { await setSpine(bookId, { box: refined, cropChecked: true }); return; }
+  console.log(`[spines] rejecting a sloppy crop for "${book.title}" — searching again`);
+  await rejectSpine(book);
+}
+
+async function processBook(rawId) {
+  if (String(rawId).startsWith('audit:')) {
+    const id = String(rawId).slice(6);
+    try {
+      await auditBook(id);
+      attempts.delete(rawId);
+    } catch (err) {
+      if (err instanceof RateLimitError && (attempts.get(rawId) || 0) < MAX_ATTEMPTS) {
+        attempts.set(rawId, (attempts.get(rawId) || 0) + 1);
+        pausedUntil = Date.now() + err.retryAfterMs;
+        queue.unshift(rawId);
+        queued.add(rawId);
+      } else {
+        console.warn('[spines] audit failed -', err.message);
+        attempts.delete(rawId);
+        await setSpine(id, { cropChecked: true }).catch(() => {});
+      }
+    }
+    return;
+  }
+  const bookId = rawId;
   const book = await Book.findById(bookId);
   if (!book || book.spine?.verifiedBy === 'user') return;
   await setSpine(bookId, { status: 'searching', error: '' });
@@ -109,7 +168,7 @@ async function processBook(bookId) {
         imageUrl: c.imageUrl, thumbnailUrl: c.thumbnailUrl, sourcePage: c.sourcePage, sourceName: c.sourceName,
         provider: c.provider, license: c.license, creator: c.creator, width: c.width, height: c.height,
         box: a.spineBox, view: a.view, confidence: Number(a.confidence) || null, verifiedBy: 'gemini', checkedAt: new Date(),
-        searchLevel: 2,
+        searchLevel: 2, cropChecked: true,
       });
     } else {
       await setSpine(bookId, { ...clearedSpine('unavailable'), checkedAt: new Date(), queriesDone: 2, searchLevel: 2 });
@@ -184,7 +243,12 @@ export async function resumeSpineQueue() {
   );
   const pending = await Book.find({ 'spine.status': { $in: ['queued', 'searching'] } }, '_id');
   for (const b of pending) { if (!queued.has(String(b._id))) { queued.add(String(b._id)); queue.push(String(b._id)); } }
-  if (pending.length) { console.log(`[spines] resuming ${pending.length} queued book(s)`); run(); }
+  // Audit stored photos with the stricter crop check (after the pending searches).
+  const unaudited = await Book.find({ 'spine.status': { $in: ['found', 'angled'] }, 'spine.cropChecked': { $ne: true }, 'spine.verifiedBy': { $ne: 'user' } }, '_id');
+  for (const b of unaudited) { const key = `audit:${b._id}`; if (!queued.has(key)) { queued.add(key); queue.push(key); } }
+  if (pending.length) console.log(`[spines] resuming ${pending.length} queued book(s)`);
+  if (unaudited.length) console.log(`[spines] auditing ${unaudited.length} stored spine photo(s)`);
+  if (pending.length || unaudited.length) run();
 }
 
 export async function retrySpine(book) {

@@ -5,6 +5,7 @@
  * the spine is (a bounding box we can crop to).
  */
 import { imageSize } from 'image-size';
+import { Jimp } from 'jimp';
 
 // Free-tier models, tried in order when one is overloaded.
 // (Checked against this key: the 2.5 models are retired for new users, and
@@ -121,10 +122,48 @@ export async function verifyCandidates(book, candidates, referenceCoverUrl) {
 
   const results = await callGemini(parts);
   const list = Array.isArray(results) ? results : [];
-  return loaded.map(({ c }, i) => {
+  return loaded.map(({ c, img }, i) => {
     const a = list.find((r) => Number(r.index) === i) || list[i] || {};
-    return { candidate: c, assessment: { ...a, spineBox: validBox(a.spineBox) ? a.spineBox.map(Math.round) : null } };
+    return { candidate: c, image: img, assessment: { ...a, spineBox: validBox(a.spineBox) ? a.spineBox.map(Math.round) : null } };
   });
+}
+
+/** Cuts the box region out of an image buffer (used only transiently for checking). */
+async function cropToBox(buf, box) {
+  const img = await Jimp.read(buf);
+  const W = img.width;
+  const H = img.height;
+  const [y1, x1, y2, x2] = box;
+  const x = Math.max(0, Math.floor((x1 / 1000) * W));
+  const y = Math.max(0, Math.floor((y1 / 1000) * H));
+  const w = Math.max(1, Math.min(W - x, Math.ceil(((x2 - x1) / 1000) * W)));
+  const h = Math.max(1, Math.min(H - y, Math.ceil(((y2 - y1) / 1000) * H)));
+  img.crop({ x, y, w, h });
+  if (Math.max(w, h) > 700) img.scaleToFit({ w: 700, h: 700 });
+  return img.getBuffer('image/jpeg');
+}
+
+/**
+ * Second, stricter check on the EXACT region that will be displayed: it must be
+ * one book's spine only — no cover artwork, no neighbouring books — with the
+ * right title. Returns { clean, reason }, or null if the image couldn't be cropped.
+ */
+export async function verifyCrop(book, image, box) {
+  let crop;
+  try { crop = await cropToBox(image.buf, box); } catch { return null; }
+  const parts = [
+    { text: `This image is a crop that should show ONLY the spine of the physical book ${describe(book)}.
+Judge strictly and return ONLY JSON:
+{"singleSpine": true only if exactly ONE book's spine fills the crop,
+ "coverVisible": true if any part of a front or back COVER (artwork, big title block, cover illustration) is visible beyond the spine,
+ "othersVisible": true if parts of neighbouring books, shelves, hands or background objects are visible,
+ "titleMatch": true if the text on the spine matches the title "${book.title}",
+ "reason": one short sentence}` },
+    { inline_data: { mime_type: 'image/jpeg', data: crop.toString('base64') } },
+  ];
+  const out = await callGemini(parts, PRECISE_MODELS());
+  const clean = out?.singleSpine === true && out?.coverVisible !== true && out?.othersVisible !== true && out?.titleMatch === true;
+  return { clean, reason: String(out?.reason || '') };
 }
 
 /** Strict acceptance rules — never take a result just because it came first. */

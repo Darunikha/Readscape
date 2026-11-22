@@ -55,6 +55,7 @@ const bookSchema = new mongoose.Schema(
       checkedAt: { type: Date, default: null },
       error: { type: String, default: '' },
       rejected: { type: [String], default: [] }, // image URLs marked wrong — never re-used
+      cropChecked: { type: Boolean, default: false }, // the displayed crop passed the "clean single spine" check
       queriesDone: { type: Number, default: 0 }, // web searches already spent on this book
       searchLevel: { type: Number, default: 0 }, // version of the search strategy last used
     },
