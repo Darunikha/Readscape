@@ -1,9 +1,10 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { api } from '../lib/api';
-import { bookSummary, SHELVES } from '../lib/utils';
+import { bookSummary, coverUrl, SHELVES } from '../lib/utils';
 import { useAuth } from './AuthContext';
 import { useToast } from './ToastContext';
 import ProgressModal from '../components/books/ProgressModal';
+import BookAddedAnimation from '../components/books/BookAddedAnimation';
 
 const ShelfContext = createContext(null);
 
@@ -19,6 +20,23 @@ export function ShelfProvider({ children }) {
   const [customShelves, setCustomShelves] = useState([]);
   const [version, setVersion] = useState(0);
   const [progressEntry, setProgressEntry] = useState(null);
+  const [addedEvent, setAddedEvent] = useState(null);
+
+  /** Plays the spinning-book animation (skipped for people who prefer reduced motion). */
+  const celebrate = useCallback((book, label) => {
+    try { if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return; } catch { /* ignore */ }
+    const start = () => setAddedEvent({ id: Date.now(), book, label });
+    if (!book.coverId) { start(); return; }
+    // Wait (briefly) for the cover so the spinning book never shows a blank face.
+    let started = false;
+    const go = () => { if (!started) { started = true; start(); } };
+    const img = new Image();
+    img.onload = go;
+    img.onerror = go;
+    img.src = coverUrl(book.coverId, 'M');
+    setTimeout(go, 1500);
+  }, []);
+  const clearAdded = useCallback(() => setAddedEvent(null), []);
 
   const bump = useCallback(() => setVersion((v) => v + 1), []);
 
@@ -45,6 +63,7 @@ export function ShelfProvider({ children }) {
       setEntries((m) => ({ ...m, [book.olId]: { _id: entry._id, olId: book.olId, status: entry.status } }));
       if (!unchanged) {
         toast.success(existing ? `Moved to ${SHELVES[status].label}` : `Added to ${SHELVES[status].label}`);
+        celebrate(book, existing ? `Moved to ${SHELVES[status].label}` : `Added to ${SHELVES[status].label}`);
         bump();
       }
       return entry;
@@ -52,7 +71,7 @@ export function ShelfProvider({ children }) {
       toast.error(err.message);
       throw err;
     }
-  }, [entries, toast, bump]);
+  }, [entries, toast, bump, celebrate]);
 
   const removeFromShelves = useCallback(async (book) => {
     const existing = entries[book.olId];
@@ -76,11 +95,12 @@ export function ShelfProvider({ children }) {
         ? { ...s, olIds: on ? s.olIds.filter((id) => id !== book.olId) : [...s.olIds, book.olId], count: s.count + (on ? -1 : 1) }
         : s)));
       toast.success(on ? `Removed from “${shelf.name}”` : `Added to “${shelf.name}”`);
+      if (!on) celebrate(book, `Added to “${shelf.name}”`);
       bump();
     } catch (err) {
       toast.error(err.message);
     }
-  }, [toast, bump]);
+  }, [toast, bump, celebrate]);
 
   const createShelf = useCallback(async (name) => {
     const { shelf } = await api.post('/custom-shelves', { name });
@@ -123,6 +143,7 @@ export function ShelfProvider({ children }) {
   return (
     <ShelfContext.Provider value={value}>
       {children}
+      <BookAddedAnimation key={addedEvent?.id} event={addedEvent} onDone={clearAdded} />
       <ProgressModal entry={progressEntry} onClose={() => setProgressEntry(null)} onChanged={onEntryChanged} />
     </ShelfContext.Provider>
   );

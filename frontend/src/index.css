@@ -141,6 +141,18 @@
 @utility line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
 
+@keyframes book-pop {
+  0% { opacity: 0; transform: translateY(28px) scale(0.55); }
+  14% { opacity: 1; transform: translateY(0) scale(1); }
+  78% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-26px) scale(0.82); }
+}
+@keyframes book-turn {
+  0% { transform: rotateX(-10deg) rotateY(-25deg); }
+  100% { transform: rotateX(-6deg) rotateY(335deg); }
+}
+@keyframes book-veil { 0%, 100% { opacity: 0; } 18%, 72% { opacity: 1; } }
+
 @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
 
 @media (prefers-reduced-motion: reduce) {
