@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-export const SHELF_STATUSES = ['reading', 'read', 'want'];
+export const SHELF_STATUSES = ['reading', 'read', 'want', 'dnf'];
 
 /** A book on a user's bookshelf. One entry per (user, book) — no duplicates. */
 const userBookSchema = new mongoose.Schema(

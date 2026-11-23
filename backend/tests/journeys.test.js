@@ -105,7 +105,7 @@ test('reading progress, finishing a book and the reading challenge', async () =>
   assert.equal(challenge.body.challenge.remaining, 24);
 
   const summary = await api().get('/api/shelf/summary').set(auth(alice));
-  assert.deepEqual(summary.body.counts, { reading: 0, read: 1, want: 0 });
+  assert.deepEqual(summary.body.counts, { reading: 0, read: 1, want: 0, dnf: 0 });
   assert.ok(summary.body.recentActivity.some((a) => a.type === 'finished'));
 });
 
@@ -198,4 +198,32 @@ test('removing a book from the shelf', async () => {
   assert.equal(del.status, 200);
   const after = await api().get('/api/shelf').set(auth(alice));
   assert.equal(after.body.entries.length, 0);
+});
+
+test('DNF shelf: keeps the page you stopped at and never counts towards the goal', async () => {
+  const add = await api().post('/api/shelf').set(auth(alice)).send({ book: BOOK2, status: 'reading' });
+  assert.equal(add.status, 201);
+  const id = add.body.entry._id;
+  await api().patch(`/api/shelf/${id}`).set(auth(alice)).send({ currentPage: 300 });
+
+  const before = await api().get('/api/challenge').set(auth(alice));
+
+  const dnf = await api().patch(`/api/shelf/${id}`).set(auth(alice)).send({ status: 'dnf' });
+  assert.equal(dnf.status, 200);
+  assert.equal(dnf.body.entry.status, 'dnf');
+  assert.equal(dnf.body.entry.currentPage, 300, 'remembers where you stopped');
+  assert.equal(dnf.body.entry.finishedAt, null, 'a DNF has no finish date');
+
+  const after = await api().get('/api/challenge').set(auth(alice));
+  assert.equal(after.body.challenge.completed, before.body.challenge.completed, 'DNF does not count as finished');
+
+  const shelf = await api().get('/api/shelf?status=dnf').set(auth(alice));
+  assert.equal(shelf.body.entries.length, 1);
+  const summary = await api().get('/api/shelf/summary').set(auth(alice));
+  assert.equal(summary.body.counts.dnf, 1);
+  assert.ok(summary.body.recentActivity.some((a) => a.type === 'dnf'));
+
+  const back = await api().patch(`/api/shelf/${id}`).set(auth(alice)).send({ status: 'reading' });
+  assert.equal(back.body.entry.status, 'reading', 'can be picked up again');
+  await api().delete(`/api/shelf/${id}`).set(auth(alice));
 });

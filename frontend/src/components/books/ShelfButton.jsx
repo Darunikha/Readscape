@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BookCheck, BookMarked, BookOpen, Check, ChevronDown, FolderPlus, Plus, Trash2 } from 'lucide-react';
+import { BookCheck, BookMarked, BookOpen, BookX, Check, ChevronDown, FolderPlus, Plus, Trash2 } from 'lucide-react';
 import Popover, { MenuDivider, MenuItem, MenuLabel } from '../ui/Popover';
 import { useShelf } from '../../context/ShelfContext';
 import { useConfirm } from '../../context/ConfirmContext';
@@ -7,7 +7,7 @@ import { useToast } from '../../context/ToastContext';
 import { cn, SHELVES } from '../../lib/utils';
 import { Spinner } from '../ui';
 
-const STATUS_ICONS = { reading: BookOpen, read: BookCheck, want: BookMarked };
+const STATUS_ICONS = { reading: BookOpen, read: BookCheck, want: BookMarked, dnf: BookX };
 
 /** The shelf menu body: default shelves, custom shelves, remove. */
 function ShelfMenu({ book, close }) {

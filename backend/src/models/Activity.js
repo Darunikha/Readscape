@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-export const ACTIVITY_TYPES = ['want', 'started', 'progress', 'finished', 'reviewed', 'followed', 'goal'];
+export const ACTIVITY_TYPES = ['want', 'started', 'progress', 'finished', 'dnf', 'reviewed', 'followed', 'goal'];
 
 const activitySchema = new mongoose.Schema(
   {

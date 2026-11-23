@@ -41,6 +41,13 @@ const SECTIONS = [
     left: <><UprightSpines /><DaisyVase className="-ml-2" /></>,
     right: <><Globe /><LyingBooks count={2} width={96} className="-ml-4" /></>,
   },
+  {
+    key: 'dnf',
+    title: 'DNF',
+    empty: 'Books you set aside rest here — no guilt, no pressure.',
+    left: <><LyingBooks count={2} width={118} /><CandleJar className="ml-3" /></>,
+    right: <><FramedPrint /><UprightSpines size={0.74} flip className="ml-1" /></>,
+  },
 ];
 const SORTS = [
   { value: 'added', label: 'Date added' },
@@ -168,7 +175,7 @@ export default function Bookshelf() {
   useSpineLookups(data?.entries, reload);
 
   const groups = useMemo(() => {
-    const g = { reading: [], want: [], read: [] };
+    const g = { reading: [], want: [], read: [], dnf: [] };
     for (const e of data?.entries || []) g[e.status]?.push(e);
     return g;
   }, [data]);

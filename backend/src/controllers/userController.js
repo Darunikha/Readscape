@@ -88,7 +88,7 @@ export async function getProfile(req, res) {
   const count = (s) => counts.find((c) => c._id === s)?.n || 0;
   res.json({
     ...base,
-    stats: { read: count('read'), reading: count('reading'), want: count('want'), reviews, followers, following },
+    stats: { read: count('read'), reading: count('reading'), want: count('want'), dnf: count('dnf'), reviews, followers, following },
     challenge: { ...challenge, books: undefined },
   });
 }
@@ -97,7 +97,7 @@ export async function userShelf(req, res) {
   const target = await findByUsername(req.params.username);
   await assertVisible(target, req.user);
   const filter = { user: target._id };
-  if (['reading', 'read', 'want'].includes(req.query.status)) filter.status = req.query.status;
+  if (['reading', 'read', 'want', 'dnf'].includes(req.query.status)) filter.status = req.query.status;
   const [entries, reviews] = await Promise.all([
     UserBook.find(filter).populate('book', BOOK_CARD_FIELDS),
     Review.find({ user: target._id }, 'book rating'),

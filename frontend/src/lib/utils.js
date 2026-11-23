@@ -17,6 +17,7 @@ export const SHELVES = {
   reading: { key: 'reading', label: 'Currently Reading', short: 'Reading' },
   read: { key: 'read', label: 'Read', short: 'Read' },
   want: { key: 'want', label: 'Want to Read', short: 'Want to Read' },
+  dnf: { key: 'dnf', label: 'Did Not Finish', short: 'DNF' },
 };
 
 export const authorLine = (authors = []) => (authors.length ? authors.slice(0, 2).join(', ') : 'Unknown author');

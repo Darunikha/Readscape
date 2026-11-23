@@ -2,7 +2,7 @@
 
 A personal book discovery and reading-tracking platform: your own digital library, reading journal and a quiet community of fellow readers.
 
-- **Bookshelf first.** Currently Reading, Read and Want to Read shelves, plus custom shelves you can create, rename and delete. Grid view (covers on shelf ledges) or list view, with sorting by title, author, date added or rating, genre filters and search within a shelf.
+- **Bookshelf first.** Currently Reading, Read, Want to Read and DNF (Did Not Finish) shelves, plus custom shelves you can create, rename and delete. Grid view (covers on shelf ledges) or list view, with sorting by title, author, date added or rating, genre filters and search within a shelf.
 - **Reading progress.** You can update your current page, see the percentage, and set start and finish dates. When you mark a book as finished, it moves to Read, records the completion date, counts towards your goal and asks you to rate it.
 - **Discovery.** Trending, popular, new releases, personalised recommendations, browsing by genre, and search, all using real data and covers from the [Open Library API](https://openlibrary.org/developers/api).
 - **Reviews.** 1–5 star ratings, written reviews (edit, delete, spoiler blur), appreciation likes, average ratings and a rating breakdown.

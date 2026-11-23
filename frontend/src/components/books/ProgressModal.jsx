@@ -14,6 +14,7 @@ const STATUS_OPTIONS = [
   { value: 'want', label: 'Want to Read' },
   { value: 'reading', label: 'Reading' },
   { value: 'read', label: 'Read' },
+  { value: 'dnf', label: 'DNF' },
 ];
 
 /**
@@ -48,6 +49,7 @@ export default function ProgressModal({ entry, onClose, onChanged }) {
   const page = Math.min(Number(form.currentPage) || 0, total || Infinity);
   const percent = form.status === 'read' ? 100 : total ? Math.round((page / total) * 100) : 0;
   const atEnd = total > 0 && page >= total && form.status === 'reading';
+  const tracksPages = form.status === 'reading' || form.status === 'dnf';
   const set = (k) => (e) => { setForm((f) => ({ ...f, [k]: e?.target ? e.target.value : e })); setError(''); };
 
   const save = async (overrides = {}) => {
@@ -56,7 +58,7 @@ export default function ProgressModal({ entry, onClose, onChanged }) {
       totalPages: form.totalPages === '' ? null : Number(form.totalPages),
       currentPage: Number(form.currentPage) || 0,
       startedAt: form.startedAt || null,
-      finishedAt: form.status === 'read' ? form.finishedAt || todayInput() : form.finishedAt || null,
+      finishedAt: form.status === 'read' ? form.finishedAt || todayInput() : form.status === 'dnf' ? null : form.finishedAt || null,
       ...overrides,
     };
     if (payload.totalPages !== null && (!Number.isInteger(payload.totalPages) || payload.totalPages < 1)) {
@@ -132,7 +134,7 @@ export default function ProgressModal({ entry, onClose, onChanged }) {
 
         {form.status !== 'want' && (
           <div className="space-y-4">
-            {form.status === 'reading' && (
+            {tracksPages && (
               <div>
                 <input
                   type="range"
@@ -148,8 +150,8 @@ export default function ProgressModal({ entry, onClose, onChanged }) {
               </div>
             )}
             <div className="grid grid-cols-2 gap-3">
-              {form.status === 'reading' && (
-                <Field label="Current page">
+              {tracksPages && (
+                <Field label={form.status === 'dnf' ? 'Stopped at page' : 'Current page'}>
                   <input type="number" min={0} max={total || undefined} value={form.currentPage} onChange={set('currentPage')} className="input" inputMode="numeric" />
                 </Field>
               )}
@@ -159,9 +161,11 @@ export default function ProgressModal({ entry, onClose, onChanged }) {
               <Field label="Started">
                 <input type="date" value={form.startedAt} max={todayInput()} onChange={set('startedAt')} className="input" />
               </Field>
-              <Field label="Finished">
-                <input type="date" value={form.finishedAt} max={todayInput()} min={form.startedAt || undefined} onChange={set('finishedAt')} className="input" />
-              </Field>
+              {form.status !== 'dnf' && (
+                <Field label="Finished">
+                  <input type="date" value={form.finishedAt} max={todayInput()} min={form.startedAt || undefined} onChange={set('finishedAt')} className="input" />
+                </Field>
+              )}
             </div>
           </div>
         )}

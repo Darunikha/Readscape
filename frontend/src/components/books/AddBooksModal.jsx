@@ -11,6 +11,7 @@ const TARGETS = [
   { value: 'reading', label: 'Reading' },
   { value: 'want', label: 'Want to Read' },
   { value: 'read', label: 'Read' },
+  { value: 'dnf', label: 'DNF' },
 ];
 
 /** Search the catalogue and place books straight onto a shelf. */

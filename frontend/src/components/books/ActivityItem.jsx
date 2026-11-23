@@ -9,6 +9,7 @@ function describe(a) {
     case 'started': return 'started reading';
     case 'progress': return a.data?.percent != null ? `is ${a.data.percent}% through` : `is on page ${a.data?.page} of`;
     case 'finished': return 'finished';
+    case 'dnf': return 'set aside (DNF)';
     case 'reviewed': return 'reviewed';
     case 'followed': return 'started following';
     case 'goal': return `set a goal of ${a.data?.target} books for ${a.data?.year}`;

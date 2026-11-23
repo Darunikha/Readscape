@@ -8,7 +8,7 @@ import { upsertBookFromSummary } from '../services/bookService.js';
 import { logActivity, populateActivity } from '../services/activityService.js';
 import { badRequest, notFound } from '../utils/httpError.js';
 
-const STATUS_ACTIVITY = { want: 'want', reading: 'started', read: 'finished' };
+const STATUS_ACTIVITY = { want: 'want', reading: 'started', read: 'finished', dnf: 'dnf' };
 
 /** Shapes a populated entry for the client, including computed progress. */
 export function serializeEntry(entry, ratingsByBook = new Map()) {
@@ -56,6 +56,10 @@ function applyStatus(entry, status, book) {
   } else if (status === 'want') {
     entry.currentPage = 0;
     entry.startedAt = null;
+    entry.finishedAt = null;
+  } else if (status === 'dnf') {
+    // Did Not Finish: remember where you stopped, but never count it towards the yearly goal.
+    if (!entry.startedAt) entry.startedAt = new Date();
     entry.finishedAt = null;
   }
 }
